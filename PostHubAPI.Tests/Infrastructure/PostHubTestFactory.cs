@@ -19,7 +19,7 @@ public class PostHubTestFactory : WebApplicationFactory<Program>
             // Remove real database registration
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-            
+
             if (descriptor != null)
             {
                 services.Remove(descriptor);
@@ -36,7 +36,7 @@ public class PostHubTestFactory : WebApplicationFactory<Program>
             var serviceProvider = services.BuildServiceProvider();
             using var scope = serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            
+
             // Ensure the database schema is created
             dbContext.Database.EnsureCreated();
         });

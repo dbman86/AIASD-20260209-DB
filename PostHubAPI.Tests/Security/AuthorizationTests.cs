@@ -91,7 +91,7 @@ public class AuthorizationTests : IClassFixture<PostHubTestFactory>
     public async Task CommentEndpoint_WithInvalidToken_Returns401()
     {
         // Arrange
-        _client.DefaultRequestHeaders.Authorization = 
+        _client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", "invalid-token-12345");
 
         // Act
@@ -106,7 +106,7 @@ public class AuthorizationTests : IClassFixture<PostHubTestFactory>
     public async Task CommentEndpoint_WithMalformedToken_Returns401()
     {
         // Arrange
-        _client.DefaultRequestHeaders.Authorization = 
+        _client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", "not.a.valid.jwt");
 
         // Act

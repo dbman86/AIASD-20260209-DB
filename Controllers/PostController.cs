@@ -72,7 +72,7 @@ public class PostController(IPostService postService) : ControllerBase
             await _postService.DeletePostAsync(id);
             return NoContent();
         }
-        catch(NotFoundException exception)
+        catch (NotFoundException exception)
         {
             return NotFound(exception.Message);
         }

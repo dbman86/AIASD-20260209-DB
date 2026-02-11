@@ -28,7 +28,7 @@ public class PostFlowIntegrationTests : IDisposable
             .Options;
 
         _context = new ApplicationDbContext(options);
-        
+
         // Setup AutoMapper with the actual mapping profiles
         var config = new MapperConfiguration(cfg =>
         {
@@ -36,7 +36,7 @@ public class PostFlowIntegrationTests : IDisposable
             cfg.AddProfile<CommentProfile>();
         });
         _mapper = config.CreateMapper();
-        
+
         _postService = new PostService(_context, _mapper);
     }
 

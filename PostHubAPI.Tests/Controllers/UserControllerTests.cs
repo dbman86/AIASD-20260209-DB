@@ -54,7 +54,7 @@ public class UserControllerTests
             Password = "Test123!",
             ConfirmPassword = "Test123!"
         };
-        
+
         _mockUserService.Setup(s => s.Register(registerDto))
             .ThrowsAsync(new ArgumentException("Email already exists"));
 
@@ -117,7 +117,7 @@ public class UserControllerTests
             Username = "testuser",
             Password = "WrongPassword"
         };
-        
+
         _mockUserService.Setup(s => s.Login(loginDto))
             .ThrowsAsync(new ArgumentException("Invalid credentials"));
 

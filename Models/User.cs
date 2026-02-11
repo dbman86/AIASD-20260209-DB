@@ -4,5 +4,5 @@ namespace PostHubAPI.Models;
 
 public class User : IdentityUser
 {
-    
+
 }

@@ -130,8 +130,8 @@ public class InputValidationTests
         var validationResults = ValidateModel(dto);
 
         // Assert
-        validationResults.Should().Contain(v => 
-            v.MemberNames.Contains("ConfirmPassword") || 
+        validationResults.Should().Contain(v =>
+            v.MemberNames.Contains("ConfirmPassword") ||
             v.ErrorMessage!.Contains("password"));
     }
 

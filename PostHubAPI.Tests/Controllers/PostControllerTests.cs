@@ -20,7 +20,7 @@ public class PostControllerTests
     {
         _mockPostService = new Mock<IPostService>();
         _controller = new PostController(_mockPostService.Object);
-        
+
         // Setup HttpContext for Request.Scheme and Request.Host
         _controller.ControllerContext = new ControllerContext
         {

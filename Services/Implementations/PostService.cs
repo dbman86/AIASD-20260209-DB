@@ -39,7 +39,7 @@ public class PostService(ApplicationDbContext context, IMapper mapper) : IPostSe
     public async Task<ReadPostDto> EditPostAsync(int id, EditPostDto dto)
     {
         Post? postToEdit = await context.Posts.FirstOrDefaultAsync(p => p.Id == id);
-            
+
         if (postToEdit != null)
         {
             mapper.Map(dto, postToEdit);

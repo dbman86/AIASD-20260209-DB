@@ -20,7 +20,7 @@ public class CommentControllerTests
     {
         _mockCommentService = new Mock<ICommentService>();
         _controller = new CommentController(_mockCommentService.Object);
-        
+
         // Setup HttpContext for Request.Scheme and Request.Host
         _controller.ControllerContext = new ControllerContext
         {
