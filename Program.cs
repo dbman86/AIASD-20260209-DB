@@ -7,6 +7,7 @@ using PostHubAPI.Data;
 using PostHubAPI.Models;
 using PostHubAPI.Services.Implementations;
 using PostHubAPI.Services.Interfaces;
+using PostHubAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -21,6 +22,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+// Register Feature Flag Service
+builder.Services.Configure<FeatureFlagOptions>(
+    configuration.GetSection(FeatureFlagOptions.SectionName));
+builder.Services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(opts => opts.UseInMemoryDatabase("PostHubApi.db"));
 
@@ -60,6 +66,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Add Feature Flag Middleware
+app.UseFeatureFlags();
 
 app.UseAuthentication();
 

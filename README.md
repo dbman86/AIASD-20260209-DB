@@ -14,6 +14,12 @@ The **PostHubAPI** is a blog API that provides complete CRUD (Create, Read, Upda
 - **CRUD for Posts**: Create, read, update, and delete blog posts.
 - **CRUD for Comments**: Manage comments associated with each post.
 - **User Registration**: Enable user registration and management to interact with the blog.
+- **Feature Flags**: Comprehensive feature flag system for controlled rollout and A/B testing.
+  - Configuration-based feature flags
+  - Percentage-based gradual rollouts
+  - A/B testing with multiple variants
+  - User-specific feature overrides
+  - API endpoints to query feature status
 
 ## How to Use
 
@@ -33,6 +39,137 @@ git clone https://github.com/your-username/PostHubAPI.git
 
 4. **Using the API**:
 - Utilize the provided routes and endpoints to interact with the API functionalities.
+
+## Feature Flags
+
+PostHubAPI includes a comprehensive feature flag system for controlled rollout and A/B testing.
+
+### Configuration
+
+Feature flags are configured in `appsettings.json`:
+
+```json
+{
+  "FeatureFlags": {
+    "Flags": [
+      {
+        "Name": "NewFeature",
+        "Enabled": false,
+        "Description": "Example feature flag",
+        "RolloutPercentage": 50
+      },
+      {
+        "Name": "ABTestFeature",
+        "Enabled": true,
+        "Description": "A/B testing example",
+        "Variants": ["control", "variant-a", "variant-b"]
+      },
+      {
+        "Name": "PremiumFeature",
+        "Enabled": true,
+        "Description": "Feature for specific users",
+        "AllowedUsers": ["admin@example.com"]
+      }
+    ]
+  }
+}
+```
+
+### Feature Flag Properties
+
+- **Name**: Unique identifier for the feature flag
+- **Enabled**: Master switch for the feature (true/false)
+- **Description**: Human-readable description
+- **RolloutPercentage**: Percentage of users who see the feature (0-100)
+- **Variants**: Array of variant names for A/B testing
+- **AllowedUsers**: List of user IDs that always have access (override)
+
+### API Endpoints
+
+- `GET /api/FeatureFlag` - Get all feature flags for current user
+- `GET /api/FeatureFlag/{featureName}` - Check specific feature status
+- `GET /api/FeatureFlag/ab-test/my-variant` - Get assigned A/B test variant
+- `GET /api/FeatureFlag/experimental/new-feature` - Example feature-gated endpoint
+
+### Usage in Code
+
+#### 1. Inject the Service
+
+```csharp
+public class MyController : ControllerBase
+{
+    private readonly IFeatureFlagService _featureFlagService;
+
+    public MyController(IFeatureFlagService featureFlagService)
+    {
+        _featureFlagService = featureFlagService;
+    }
+}
+```
+
+#### 2. Check Feature Flags Programmatically
+
+```csharp
+public IActionResult MyAction()
+{
+    if (_featureFlagService.IsEnabled("NewFeature", userId))
+    {
+        // New feature code
+        return Ok("New feature enabled!");
+    }
+    else
+    {
+        // Fallback code
+        return Ok("Standard feature");
+    }
+}
+```
+
+#### 3. Use the Attribute for Controller Actions
+
+```csharp
+[HttpGet("new-endpoint")]
+[RequireFeatureFlag("NewFeature")]
+public IActionResult NewEndpoint()
+{
+    return Ok("This endpoint is only accessible when NewFeature is enabled");
+}
+```
+
+#### 4. A/B Testing
+
+```csharp
+var variant = _featureFlagService.GetVariant("ABTestFeature", userId);
+switch (variant)
+{
+    case "control":
+        return Ok("Control experience");
+    case "variant-a":
+        return Ok("Variant A experience");
+    case "variant-b":
+        return Ok("Variant B experience");
+    default:
+        return Ok("Default experience");
+}
+```
+
+### How It Works
+
+1. **Consistent Hashing**: Users are consistently assigned to rollout groups or variants based on a hash of the feature name and user ID
+2. **Middleware**: Feature flag context is automatically attached to each request
+3. **Development Headers**: In development mode, enabled feature flags are included in `X-Feature-Flags` response header
+4. **Attribute-Based Gating**: Use `[RequireFeatureFlag]` attribute to gate entire endpoints
+5. **Graceful Degradation**: Disabled features return 404 to maintain API contract
+
+### Best Practices
+
+- **Start Small**: Roll out features gradually (10% → 25% → 50% → 100%)
+- **Monitor Metrics**: Track usage and errors for each variant
+- **Clean Up**: Remove feature flags once features are fully rolled out
+- **Document**: Keep feature flag descriptions up to date
+- **Test**: Verify both enabled and disabled states
+
+
 ## Evergreen Development & Automation
 
 This project implements evergreen software development practices to maintain security, quality, and sustainability.
