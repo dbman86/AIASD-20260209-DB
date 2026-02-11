@@ -22,7 +22,7 @@ public class UserServiceTests : IDisposable
         // Setup UserManager mock
         var store = new Mock<IUserStore<User>>();
         _mockUserManager = new Mock<UserManager<User>>(
-            store.Object, null, null, null, null, null, null, null, null);
+            store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
         // Setup Configuration mock with JWT settings
         _mockConfiguration = new Mock<IConfiguration>();

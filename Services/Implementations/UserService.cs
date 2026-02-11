@@ -52,8 +52,8 @@ public class UserService(IConfiguration configuration, UserManager<User> userMan
 
         List<Claim> claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Email, user.Email)
+            new Claim(ClaimTypes.Name, user.UserName!),
+            new Claim(ClaimTypes.Email, user.Email!)
         };
 
         JwtSecurityToken token = GetToken(claims);
@@ -62,7 +62,7 @@ public class UserService(IConfiguration configuration, UserManager<User> userMan
 
     private JwtSecurityToken GetToken(IEnumerable<Claim> claims)
     {
-        SymmetricSecurityKey authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]));
+        SymmetricSecurityKey authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!));
 
         JwtSecurityToken token = new JwtSecurityToken
         (

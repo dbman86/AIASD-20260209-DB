@@ -6,5 +6,5 @@ public class CreateCommentDto
 {
     [Required]
     [StringLength(80)]
-    public string Body { get; set; }
+    public string Body { get; set; } = string.Empty;
 }
