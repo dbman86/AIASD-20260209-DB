@@ -40,7 +40,7 @@ public class UserService(IConfiguration configuration, UserManager<User> userMan
     public async Task<string> Login(LoginUserDto dto)
     {
         User? user = await userManager.FindByNameAsync(dto.Username);
-        if (user == null) 
+        if (user == null)
         {
             throw new ArgumentException($"Name {dto.Username} is not registered!");
         }
@@ -52,17 +52,17 @@ public class UserService(IConfiguration configuration, UserManager<User> userMan
 
         List<Claim> claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Email, user.Email)
+            new Claim(ClaimTypes.Name, user.UserName!),
+            new Claim(ClaimTypes.Email, user.Email!)
         };
-        
+
         JwtSecurityToken token = GetToken(claims);
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     private JwtSecurityToken GetToken(IEnumerable<Claim> claims)
     {
-        SymmetricSecurityKey authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]));
+        SymmetricSecurityKey authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!));
 
         JwtSecurityToken token = new JwtSecurityToken
         (
@@ -75,7 +75,7 @@ public class UserService(IConfiguration configuration, UserManager<User> userMan
 
         return token;
     }
-    
+
     private static string GetErrorsText(IEnumerable<IdentityError> errors)
     {
         return string.Join(", ", errors.Select(error => error.Description).ToArray());

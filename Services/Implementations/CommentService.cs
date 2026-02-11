@@ -41,7 +41,7 @@ public class CommentService(ApplicationDbContext context, IMapper mapper) : ICom
     public async Task<ReadCommentDto> EditCommentAsync(int id, EditCommentDto dto)
     {
         Comment? commentToEdit = await context.Comments.FirstOrDefaultAsync(comment => comment.Id == id);
-        if (commentToEdit != null) 
+        if (commentToEdit != null)
         {
             mapper.Map(dto, commentToEdit);
             await context.SaveChangesAsync();
@@ -56,7 +56,7 @@ public class CommentService(ApplicationDbContext context, IMapper mapper) : ICom
     public async Task DeleteCommentAsync(int id)
     {
         Comment? comment = await context.Comments.FirstOrDefaultAsync(comment => comment.Id == id);
-        if(comment != null)
+        if (comment != null)
         {
             context.Comments.Remove(comment);
             await context.SaveChangesAsync();

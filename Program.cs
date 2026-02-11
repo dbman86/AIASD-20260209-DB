@@ -44,7 +44,7 @@ builder.Services.AddAuthentication(opts =>
         ValidateAudience = true,
         ValidAudience = configuration["JWT:ValidAudience"],
         ValidIssuer = configuration["JWT:ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!))
     };
 });
 
@@ -68,3 +68,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Make Program accessible to integration tests
+public partial class Program { }

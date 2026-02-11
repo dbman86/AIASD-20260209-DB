@@ -26,7 +26,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     }
 
     [HttpPost("{postId}")]
-    public async Task<IActionResult> CreateNewComment(int postId, [FromBody]CreateCommentDto dto)
+    public async Task<IActionResult> CreateNewComment(int postId, [FromBody] CreateCommentDto dto)
     {
         try
         {
@@ -46,7 +46,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> EditComment(int id, [FromBody]EditCommentDto dto)
+    public async Task<IActionResult> EditComment(int id, [FromBody] EditCommentDto dto)
     {
         try
         {
