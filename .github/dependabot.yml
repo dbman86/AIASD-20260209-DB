@@ -1,0 +1,50 @@
+---
+# Dependabot Configuration for Automated Dependency Updates
+# 
+# This configuration enables evergreen development practices by:
+# - Automatically creating PRs for dependency updates
+# - Grouping minor/patch updates to reduce PR noise
+# - Prioritizing security vulnerabilities
+# - Maintaining dependency freshness
+#
+# See: .github/instructions/evergreen-development.instructions.md
+
+version: 2
+updates:
+  # .NET NuGet Dependencies
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "tech-leads"
+    labels:
+      - "dependencies"
+      - "automated"
+      - "evergreen"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Group minor and patch updates together
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Separate security updates for immediate attention
+    vulnerability-alerts:
+      enabled: true
+      labels:
+        - "security"
+        - "priority-high"
+    # Version update strategy
+    versioning-strategy: "auto"
+    # Allow beta/preview versions for .NET
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"

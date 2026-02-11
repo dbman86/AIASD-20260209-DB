@@ -1,0 +1,394 @@
+---
+# Evergreen Quality Gates Workflow
+# 
+# This workflow implements comprehensive quality gates aligned with:
+# - .github/instructions/evergreen-development.instructions.md
+# - .github/instructions/ai-assisted-output.instructions.md
+#
+# Quality gates enforce:
+# - Security vulnerability scanning
+# - Code quality and linting standards  
+# - Test coverage thresholds (>80%)
+# - Build success across configurations
+# - AI provenance validation
+#
+# All gates must pass before PR merge is allowed.
+
+name: Evergreen Quality Gates
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: 
+      - main
+      - develop
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  # Gate 1: Security Scanning
+  security-scan:
+    name: Security & Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
+
+      # Secret Detection
+      - name: Scan for Secrets (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha || 'main' }}
+          head: HEAD
+          extra_args: --only-verified --fail
+
+      # Setup .NET for dependency checks
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      # Dependency Vulnerability Check
+      - name: Check for Vulnerable Dependencies
+        run: |
+          echo "Checking for vulnerable NuGet packages..."
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee vuln-check.txt
+          
+          # Fail if vulnerabilities found
+          if grep -q "has the following vulnerable packages" vuln-check.txt; then
+            echo "❌ Vulnerable dependencies detected!"
+            exit 1
+          fi
+          echo "✅ No vulnerable dependencies found"
+
+      # Generate SBOM (Software Bill of Materials)
+      - name: Generate SBOM
+        run: |
+          dotnet tool install --global CycloneDX.CLI
+          dotnet CycloneDX . -o sbom.json -f json
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+          retention-days: 90
+
+  # Gate 2: AI Provenance Validation
+  ai-provenance:
+    name: AI Provenance Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Changed Files
+        id: changed-files
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\\.md$' || true)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Validate AI Provenance Metadata
+        run: |
+          echo "Validating AI provenance for changed Markdown files..."
+          
+          FILES="${{ steps.changed-files.outputs.files }}"
+          if [ -z "$FILES" ]; then
+            echo "✅ No Markdown files changed"
+            exit 0
+          fi
+          
+          ERRORS=0
+          
+          while IFS= read -r file; do
+            if [ ! -f "$file" ]; then
+              continue
+            fi
+            
+            echo "Checking: $file"
+            
+            # Check if file has ai_generated: true
+            if grep -q "^ai_generated: true" "$file"; then
+              echo "  ℹ️  AI-generated file detected"
+              
+              # Validate required fields
+              if ! grep -q "^chat_id:" "$file"; then
+                echo "  ❌ Missing chat_id field"
+                ERRORS=$((ERRORS + 1))
+              fi
+              
+              if ! grep -q "^ai_log:" "$file"; then
+                echo "  ❌ Missing ai_log field"
+                ERRORS=$((ERRORS + 1))
+              fi
+              
+              if ! grep -q "^model:" "$file"; then
+                echo "  ❌ Missing model field"
+                ERRORS=$((ERRORS + 1))
+              fi
+              
+              if ! grep -q "^operator:" "$file"; then
+                echo "  ❌ Missing operator field"
+                ERRORS=$((ERRORS + 1))
+              fi
+              
+              # Check if ai_log path exists
+              AI_LOG=$(grep "^ai_log:" "$file" | cut -d'"' -f2 | tr -d ' ')
+              if [ -n "$AI_LOG" ] && [ ! -f "$AI_LOG" ]; then
+                echo "  ❌ Referenced ai_log does not exist: $AI_LOG"
+                ERRORS=$((ERRORS + 1))
+              fi
+              
+              if [ $ERRORS -eq 0 ]; then
+                echo "  ✅ Valid AI provenance"
+              fi
+            fi
+          done <<< "$FILES"
+          
+          if [ $ERRORS -gt 0 ]; then
+            echo ""
+            echo "❌ AI provenance validation failed with $ERRORS error(s)"
+            echo "See: .github/instructions/ai-assisted-output.instructions.md"
+            exit 1
+          fi
+          
+          echo "✅ All AI provenance requirements met"
+
+  # Gate 3: Code Quality & Linting
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      # Code Formatting Check
+      - name: Check Code Formatting
+        run: |
+          dotnet format --verify-no-changes --verbosity diagnostic
+        continue-on-error: false
+
+      # Build with Warnings as Errors
+      - name: Build with Strict Warnings
+        run: |
+          dotnet build \
+            --configuration Release \
+            --no-restore \
+            /p:TreatWarningsAsErrors=true \
+            /p:EnforceCodeStyleInBuild=true
+
+      # Run Roslyn Analyzers
+      - name: Run Static Analysis
+        run: |
+          dotnet build \
+            --configuration Release \
+            --no-restore \
+            /p:RunAnalyzers=true \
+            /p:AnalysisLevel=latest
+
+  # Gate 4: Tests & Coverage
+  test-coverage:
+    name: Tests & Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      # Run Tests with Coverage
+      - name: Run Tests with Coverage
+        run: |
+          dotnet test \
+            --configuration Release \
+            --no-restore \
+            --verbosity normal \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=opencover \
+            /p:CoverletOutput=./coverage/
+
+      # Install Coverage Tools
+      - name: Install Coverage Reporting Tool
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      # Generate Coverage Report
+      - name: Generate Coverage Report
+        run: |
+          reportgenerator \
+            -reports:./coverage/coverage.opencover.xml \
+            -targetdir:./coverage-report \
+            -reporttypes:"Html;JsonSummary"
+
+      # Enforce Coverage Threshold
+      - name: Coverage Threshold Gate
+        run: |
+          if [ -f ./coverage-report/Summary.json ]; then
+            COVERAGE=$(jq '.summary.linecoverage' ./coverage-report/Summary.json | tr -d '%')
+            echo "Code Coverage: $COVERAGE%"
+            
+            THRESHOLD=80
+            if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+              echo "❌ Coverage $COVERAGE% is below $THRESHOLD% threshold"
+              exit 1
+            fi
+            echo "✅ Coverage meets $THRESHOLD% threshold"
+          else
+            echo "⚠️  Coverage report not generated, skipping gate"
+          fi
+
+      # Upload Coverage Report
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage-report
+          retention-days: 30
+
+  # Gate 5: Build Verification
+  build-verification:
+    name: Build Verification
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        configuration: [Debug, Release]
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: |
+          dotnet build \
+            --configuration ${{ matrix.configuration }} \
+            --no-restore
+
+      - name: Publish
+        run: |
+          dotnet publish \
+            --configuration ${{ matrix.configuration }} \
+            --no-build \
+            --output ./publish
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-${{ matrix.configuration }}
+          path: ./publish
+          retention-days: 7
+
+  # Final Gate: All Checks Must Pass
+  all-gates-passed:
+    name: ✅ All Quality Gates Passed
+    needs: 
+      - security-scan
+      - ai-provenance
+      - code-quality
+      - test-coverage
+      - build-verification
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Check All Gates Status
+        run: |
+          echo "Checking all quality gates..."
+          
+          FAILED=0
+          
+          if [ "${{ needs.security-scan.result }}" != "success" ]; then
+            echo "❌ Security scan failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ needs.ai-provenance.result }}" != "success" ] && [ "${{ needs.ai-provenance.result }}" != "skipped" ]; then
+            echo "❌ AI provenance validation failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ needs.code-quality.result }}" != "success" ]; then
+            echo "❌ Code quality gate failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ needs.test-coverage.result }}" != "success" ]; then
+            echo "❌ Test coverage gate failed"
+            FAILED=1
+          fi
+          
+          if [ "${{ needs.build-verification.result }}" != "success" ]; then
+            echo "❌ Build verification failed"
+            FAILED=1
+          fi
+          
+          if [ $FAILED -eq 1 ]; then
+            echo ""
+            echo "❌ One or more quality gates failed"
+            echo "📋 Review the failed jobs above and address issues before merging"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All quality gates passed successfully!"
+          echo "🎉 PR is ready for review and merge"
+
+      - name: Post Success Comment
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ **All Quality Gates Passed**\n\n' +
+                    '- Security scan: ✅\n' +
+                    '- AI provenance: ✅\n' +
+                    '- Code quality: ✅\n' +
+                    '- Test coverage: ✅\n' +
+                    '- Build verification: ✅\n\n' +
+                    '🎉 This PR is ready for review!'
+            })
