@@ -12,6 +12,8 @@ namespace PostHubAPI.Tests.Integration;
 /// Integration tests for the complete post creation and retrieval flow
 /// Tests the service layer with actual database context (in-memory)
 /// </summary>
+[Trait("Category", "Integration")]
+[Trait("Priority", "High")]
 public class PostFlowIntegrationTests : IDisposable
 {
     private readonly ApplicationDbContext _context;

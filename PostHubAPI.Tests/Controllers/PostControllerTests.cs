@@ -9,6 +9,8 @@ using PostHubAPI.Services.Interfaces;
 
 namespace PostHubAPI.Tests.Controllers;
 
+[Trait("Category", "Unit")]
+[Trait("Priority", "High")]
 public class PostControllerTests
 {
     private readonly Mock<IPostService> _mockPostService;

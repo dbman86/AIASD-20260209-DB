@@ -7,6 +7,8 @@ using PostHubAPI.Services.Interfaces;
 
 namespace PostHubAPI.Tests.Controllers;
 
+[Trait("Category", "Unit")]
+[Trait("Priority", "Critical")]
 public class UserControllerTests
 {
     private readonly Mock<IUserService> _mockUserService;
@@ -19,7 +21,7 @@ public class UserControllerTests
     }
 
     [Fact]
-    public void Register_ValidDto_ReturnsOkResultWithTask()
+    public async Task Register_ValidDto_ReturnsOkResultWithToken()
     {
         // Arrange
         var registerDto = new RegisterUserDto
@@ -33,16 +35,16 @@ public class UserControllerTests
         _mockUserService.Setup(s => s.Register(registerDto)).ReturnsAsync(expectedToken);
 
         // Act
-        var result = _controller.Register(registerDto);
+        var result = await _controller.Register(registerDto);
 
-        // Assert  - Controller doesn't await, so returns Ok with Task
+        // Assert
         result.Should().BeOfType<OkObjectResult>();
         var okResult = result as OkObjectResult;
-        okResult!.Value.Should().BeOfType<Task<string>>();
+        okResult!.Value.Should().Be(expectedToken);
     }
 
     [Fact]
-    public void Register_ExistingEmail_ReturnsBadRequest()
+    public async Task Register_ExistingEmail_ReturnsBadRequest()
     {
         // Arrange
         var registerDto = new RegisterUserDto
@@ -53,18 +55,20 @@ public class UserControllerTests
             ConfirmPassword = "Test123!"
         };
         
-        // The controller doesn't await, so exceptions aren't caught properly in async scenarios
-        // We test the synchronous path here
         _mockUserService.Setup(s => s.Register(registerDto))
-            .Returns(Task.FromException<string>(new ArgumentException("User with this email already exists")));
+            .ThrowsAsync(new ArgumentException("Email already exists"));
 
-        // Act & Assert - Since controller doesn't await, exception won't be caught
-        var result = _controller.Register(registerDto);
-        result.Should().BeOfType<OkObjectResult>(); // Returns Ok with faulted Task
+        // Act
+        var result = await _controller.Register(registerDto);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.Value.Should().Be("Email already exists");
     }
 
     [Fact]
-    public void Register_InvalidModelState_ReturnsBadRequest()
+    public async Task Register_InvalidModelState_ReturnsBadRequest()
     {
         // Arrange
         var registerDto = new RegisterUserDto
@@ -77,14 +81,14 @@ public class UserControllerTests
         _controller.ModelState.AddModelError("Email", "Email is required");
 
         // Act
-        var result = _controller.Register(registerDto);
+        var result = await _controller.Register(registerDto);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
     }
 
     [Fact]
-    public void Login_ValidCredentials_ReturnsOkResultWithTask()
+    public async Task Login_ValidCredentials_ReturnsOkResultWithToken()
     {
         // Arrange
         var loginDto = new LoginUserDto
@@ -96,16 +100,16 @@ public class UserControllerTests
         _mockUserService.Setup(s => s.Login(loginDto)).ReturnsAsync(expectedToken);
 
         // Act
-        var result = _controller.Login(loginDto);
+        var result = await _controller.Login(loginDto);
 
-        // Assert - Controller doesn't await, so returns Ok with Task
+        // Assert
         result.Should().BeOfType<OkObjectResult>();
         var okResult = result as OkObjectResult;
-        okResult!.Value.Should().BeOfType<Task<string>>();
+        okResult!.Value.Should().Be(expectedToken);
     }
 
     [Fact]
-    public void Login_InvalidCredentials_ReturnsOkWithFaultedTask()
+    public async Task Login_InvalidCredentials_ReturnsBadRequest()
     {
         // Arrange
         var loginDto = new LoginUserDto
@@ -114,19 +118,20 @@ public class UserControllerTests
             Password = "WrongPassword"
         };
         
-        // Controller doesn't await, so exceptions aren't caught
         _mockUserService.Setup(s => s.Login(loginDto))
-            .Returns(Task.FromException<string>(new ArgumentException("Invalid username or password")));
+            .ThrowsAsync(new ArgumentException("Invalid credentials"));
 
         // Act
-        var result = _controller.Login(loginDto);
+        var result = await _controller.Login(loginDto);
 
-        // Assert - Since controller doesn't await, exception won't be caught
-        result.Should().BeOfType<OkObjectResult>();
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult!.Value.Should().Be("Invalid credentials");
     }
 
     [Fact]
-    public void Login_InvalidModelState_ReturnsBadRequest()
+    public async Task Login_InvalidModelState_ReturnsBadRequest()
     {
         // Arrange
         var loginDto = new LoginUserDto
@@ -137,7 +142,7 @@ public class UserControllerTests
         _controller.ModelState.AddModelError("Username", "Username is required");
 
         // Act
-        var result = _controller.Login(loginDto);
+        var result = await _controller.Login(loginDto);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();

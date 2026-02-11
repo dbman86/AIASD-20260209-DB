@@ -10,6 +10,8 @@ using PostHubAPI.Services.Implementations;
 
 namespace PostHubAPI.Tests.Services;
 
+[Trait("Category", "Unit")]
+[Trait("Priority", "High")]
 public class PostServiceTests : IDisposable
 {
     private readonly ApplicationDbContext _context;

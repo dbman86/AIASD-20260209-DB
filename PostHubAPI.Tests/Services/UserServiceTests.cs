@@ -9,6 +9,8 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace PostHubAPI.Tests.Services;
 
+[Trait("Category", "Unit")]
+[Trait("Priority", "Critical")]
 public class UserServiceTests : IDisposable
 {
     private readonly Mock<UserManager<User>> _mockUserManager;

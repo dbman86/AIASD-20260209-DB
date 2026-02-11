@@ -1,0 +1,176 @@
+name: CI - Build, Test, and Coverage
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better coverage analysis
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore --configuration ${{ env.CONFIGURATION }}
+    
+    - name: Run Unit Tests
+      run: |
+        dotnet test --no-build --configuration ${{ env.CONFIGURATION }} \
+          --filter "Category=Unit" \
+          --logger "trx;LogFileName=unit-tests.trx" \
+          --collect:"XPlat Code Coverage" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      continue-on-error: false
+    
+    - name: Run Integration Tests
+      run: |
+        dotnet test --no-build --configuration ${{ env.CONFIGURATION }} \
+          --filter "Category=Integration" \
+          --logger "trx;LogFileName=integration-tests.trx" \
+          --collect:"XPlat Code Coverage" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      continue-on-error: false
+    
+    - name: Run Security Tests
+      run: |
+        dotnet test --no-build --configuration ${{ env.CONFIGURATION }} \
+          --filter "Category=Security" \
+          --logger "trx;LogFileName=security-tests.trx" \
+          --collect:"XPlat Code Coverage" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      continue-on-error: false
+    
+    - name: Run All Tests with Coverage
+      run: |
+        dotnet test --no-build --configuration ${{ env.CONFIGURATION }} \
+          /p:CollectCoverage=true \
+          /p:CoverletOutputFormat=opencover \
+          /p:CoverletOutput=./coverage/ \
+          /p:ExcludeByFile="**/Program.cs" \
+          --logger "trx;LogFileName=all-tests.trx"
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./PostHubAPI.Tests/coverage/coverage.opencover.xml
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: unittests
+        name: codecov-posthubapi
+    
+    - name: Coverage Report Summary
+      run: |
+        echo "## Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Coverage reports have been uploaded to Codecov." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Test Execution Completed" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Unit Tests" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Integration Tests" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Security Tests" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results
+        path: '**/*.trx'
+        reporter: dotnet-trx
+        fail-on-error: true
+    
+    - name: Upload Test Results Artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          **/*.trx
+          **/coverage/*.xml
+        retention-days: 30
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Check for vulnerable packages
+      run: |
+        echo "## Security Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerabilities.txt
+        
+        if grep -q "has the following vulnerable packages" vulnerabilities.txt; then
+          echo "❌ **Vulnerable packages found**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat vulnerabilities.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        
+        echo "✅ **No vulnerable packages found**" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Upload Security Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-report
+        path: vulnerabilities.txt
+        retention-days: 30
+
+  quality-gate:
+    name: Quality Gate
+    needs: [build-and-test, security-scan]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Check Quality Gates
+      run: |
+        echo "## Quality Gate Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.build-and-test.result }}" != "success" ]; then
+          echo "❌ **Build and Tests Failed**" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        
+        if [ "${{ needs.security-scan.result }}" != "success" ]; then
+          echo "❌ **Security Scan Failed**" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+        
+        echo "✅ **All Quality Gates Passed**" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Ready to merge! 🚀" >> $GITHUB_STEP_SUMMARY
