@@ -1,0 +1,47 @@
+{
+  "summary": {
+    "generatedon": "2026-02-11T16:59:54Z",
+    "parser": "OpenCover",
+    "assemblies": 1,
+    "classes": 21,
+    "files": 21,
+    "coveredlines": 272,
+    "uncoveredlines": 61,
+    "coverablelines": 333,
+    "totallines": 687,
+    "linecoverage": 81.6,
+    "coveredbranches": 36,
+    "totalbranches": 38,
+    "branchcoverage": 94.7,
+    "coveredmethods": 67,
+    "fullcoveredmethods": 65,
+    "totalmethods": 70,
+    "methodcoverage": 95.7,
+    "fullmethodcoverage": 92.8
+ },
+  "coverage": {
+    "assemblies": [
+      { "name": "PostHubAPI", "classes": 21, "coverage": 81.6, "coveredlines": 272, "coverablelines": 333, "totallines": 687, "branchcoverage": 94.7, "coveredbranches": 36, "totalbranches": 38, "methodcoverage": 95.7, "fullmethodcoverage": 92.8, "coveredmethods": 67, "fullcoveredmethods": 65, "totalmethods": 70, "classesinassembly": [
+        { "name": "PostHubAPI.Controllers.CommentController", "coverage": 100, "coveredlines": 40, "coverablelines": 40, "totallines": 80, "branchcoverage": 100, "coveredbranches": 4, "totalbranches": 4, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 5, "fullcoveredmethods": 5, "totalmethods": 5 },
+        { "name": "PostHubAPI.Controllers.PostController", "coverage": 100, "coveredlines": 41, "coverablelines": 41, "totallines": 80, "branchcoverage": 100, "coveredbranches": 4, "totalbranches": 4, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 6, "fullcoveredmethods": 6, "totalmethods": 6 },
+        { "name": "PostHubAPI.Controllers.UserController", "coverage": 68.4, "coveredlines": 13, "coverablelines": 19, "totallines": 40, "branchcoverage": 100, "coveredbranches": 4, "totalbranches": 4, "methodcoverage": 100, "fullmethodcoverage": 33.3, "coveredmethods": 3, "fullcoveredmethods": 1, "totalmethods": 3 },
+        { "name": "PostHubAPI.Data.ApplicationDbContext", "coverage": 100, "coveredlines": 15, "coverablelines": 15, "totallines": 27, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 4, "fullcoveredmethods": 4, "totalmethods": 4 },
+        { "name": "PostHubAPI.Dtos.Comment.CreateCommentDto", "coverage": 100, "coveredlines": 1, "coverablelines": 1, "totallines": 10, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 1, "fullcoveredmethods": 1, "totalmethods": 1 },
+        { "name": "PostHubAPI.Dtos.Comment.EditCommentDto", "coverage": 100, "coveredlines": 1, "coverablelines": 1, "totallines": 10, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 1, "fullcoveredmethods": 1, "totalmethods": 1 },
+        { "name": "PostHubAPI.Dtos.Comment.ReadCommentDto", "coverage": 100, "coveredlines": 3, "coverablelines": 3, "totallines": 8, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 3, "fullcoveredmethods": 3, "totalmethods": 3 },
+        { "name": "PostHubAPI.Dtos.Post.CreatePostDto", "coverage": 100, "coveredlines": 2, "coverablelines": 2, "totallines": 14, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 2, "fullcoveredmethods": 2, "totalmethods": 2 },
+        { "name": "PostHubAPI.Dtos.Post.EditPostDto", "coverage": 100, "coveredlines": 2, "coverablelines": 2, "totallines": 7, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 2, "fullcoveredmethods": 2, "totalmethods": 2 },
+        { "name": "PostHubAPI.Dtos.Post.ReadPostDto", "coverage": 100, "coveredlines": 6, "coverablelines": 6, "totallines": 14, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 6, "fullcoveredmethods": 6, "totalmethods": 6 },
+        { "name": "PostHubAPI.Dtos.User.LoginUserDto", "coverage": 100, "coveredlines": 2, "coverablelines": 2, "totallines": 14, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 2, "fullcoveredmethods": 2, "totalmethods": 2 },
+        { "name": "PostHubAPI.Dtos.User.RegisterUserDto", "coverage": 100, "coveredlines": 4, "coverablelines": 4, "totallines": 23, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 4, "fullcoveredmethods": 4, "totalmethods": 4 },
+        { "name": "PostHubAPI.Exceptions.NotFoundException", "coverage": 100, "coveredlines": 1, "coverablelines": 1, "totallines": 6, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 1, "fullcoveredmethods": 1, "totalmethods": 1 },
+        { "name": "PostHubAPI.Models.Comment", "coverage": 100, "coveredlines": 5, "coverablelines": 5, "totallines": 16, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 5, "fullcoveredmethods": 5, "totalmethods": 5 },
+        { "name": "PostHubAPI.Models.Post", "coverage": 100, "coveredlines": 6, "coverablelines": 6, "totallines": 17, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 6, "fullcoveredmethods": 6, "totalmethods": 6 },
+        { "name": "PostHubAPI.Profiles.CommentProfile", "coverage": 0, "coveredlines": 0, "coverablelines": 6, "totallines": 15, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "fullmethodcoverage": 0, "coveredmethods": 0, "fullcoveredmethods": 0, "totalmethods": 1 },
+        { "name": "PostHubAPI.Profiles.PostProfile", "coverage": 0, "coveredlines": 0, "coverablelines": 6, "totallines": 15, "branchcoverage": null, "coveredbranches": 0, "totalbranches": 0, "methodcoverage": 0, "fullmethodcoverage": 0, "coveredmethods": 0, "fullcoveredmethods": 0, "totalmethods": 1 },
+        { "name": "PostHubAPI.Services.Implementations.CommentService", "coverage": 100, "coveredlines": 41, "coverablelines": 41, "totallines": 69, "branchcoverage": 100, "coveredbranches": 8, "totalbranches": 8, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 5, "fullcoveredmethods": 5, "totalmethods": 5 },
+        { "name": "PostHubAPI.Services.Implementations.PostService", "coverage": 100, "coveredlines": 39, "coverablelines": 39, "totallines": 69, "branchcoverage": 100, "coveredbranches": 6, "totalbranches": 6, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 6, "fullcoveredmethods": 6, "totalmethods": 6 },
+        { "name": "PostHubAPI.Services.Implementations.UserService", "coverage": 100, "coveredlines": 50, "coverablelines": 50, "totallines": 83, "branchcoverage": 100, "coveredbranches": 10, "totalbranches": 10, "methodcoverage": 100, "fullmethodcoverage": 100, "coveredmethods": 5, "fullcoveredmethods": 5, "totalmethods": 5 },
+        { "name": "Program", "coverage": 0, "coveredlines": 0, "coverablelines": 43, "totallines": 70, "branchcoverage": 0, "coveredbranches": 0, "totalbranches": 2, "methodcoverage": 0, "fullmethodcoverage": 0, "coveredmethods": 0, "fullcoveredmethods": 0, "totalmethods": 1 } ] } ]
+  }
+}
