@@ -143,6 +143,7 @@ _TeamCity*
 
 # Coverlet is a free, cross platform Code Coverage Tool
 coverage*[.json, .xml, .info]
+coverage-report/
 
 # Visual Studio code coverage results
 *.coverage
